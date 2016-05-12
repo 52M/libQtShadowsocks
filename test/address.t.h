@@ -1,5 +1,7 @@
 /*
- * socketstream.h - the header file of SocketStream class
+ * address.t.h
+ *
+ * The unit test class of Address
  *
  * Copyright (C) 2015-2016 Symeon Huang <hzwhuang@gmail.com>
  *
@@ -20,40 +22,26 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SOCKETSTREAM_H
-#define SOCKETSTREAM_H
+#ifndef ADDRESS_T_H
+#define ADDRESS_T_H
 
-#include <QObject>
-#include <QAbstractSocket>
-#include "export.h"
+#include <QString>
+#include <QtTest>
 
-namespace QSS {
-
-class QSS_EXPORT SocketStream : public QObject
+class Address_T : public QObject
 {
     Q_OBJECT
+
 public:
-    /*
-     * A light-weight class dedicated to stream data between two sockets
-     * all available data from socket a will be written to socket b
-     * vice versa
-     */
-    explicit SocketStream(QAbstractSocket *a,
-                          QAbstractSocket *b,
-                          QObject *parent = 0);
+    Address_T();
 
-signals:
-    void info(const QString &);
-
-private:
-    QAbstractSocket *as;
-    QAbstractSocket *bs;
-
-private slots:
-    void onSocketAReadyRead();
-    void onSocketBReadyRead();
+private Q_SLOTS:
+    void testConstructor1();
+    void testConstructor2();
+    void testAssignment();
+    void testSetAddress();
+    void testSetIPAddress();
+    void testSetPort();
 };
 
-}
-
-#endif // SOCKETSTREAM_H
+#endif // ADDRESS_T_H

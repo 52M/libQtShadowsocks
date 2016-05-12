@@ -1,5 +1,9 @@
 /*
- * Copyright (C) 2015-2016 Symeon Huang <hzwhuang@gmail.com>
+ * profile.t.h
+ *
+ * The unit test class of Address
+ *
+ * Copyright (C) 2016 Symeon Huang <hzwhuang@gmail.com>
  *
  * This file is part of the libQtShadowsocks.
  *
@@ -18,18 +22,23 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef PROFILE_T_H
+#define PROFILE_T_H
 
-#include <QtGlobal>
-#include <QStringList>
+#include <QString>
+#include <QtTest>
 
-class Utils
+class Profile_T : public QObject
 {
+    Q_OBJECT
+
 public:
-    //test data encrypt/decrypt speed. print result to terminal
-    static void testSpeed(const QString &method, quint32 data_size_mb);
-    static void testSpeed(quint32 data_size_mb);//test all methods
+    Profile_T();
+
+private Q_SLOTS:
+    void testConstructorEmpty();
+    void testConstructorURI();
+    void testToURI();
 };
 
-#endif // UTILS_H
+#endif // PROFILE_T_H

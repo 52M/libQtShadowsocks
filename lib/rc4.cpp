@@ -27,27 +27,23 @@
 using namespace QSS;
 
 RC4::RC4(const QByteArray &_key, const QByteArray &_iv, QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    position(0), x(0), y(0)
 {
-    position = x = y = 0;
+    Q_ASSERT(!_iv.isEmpty());
     state.resize(256);
     buffer.resize(4096);//4096 is the "BOTAN_DEFAULT_BUFFER_SIZE"
 
-    QByteArray realKey;
-    if (_iv.isEmpty()) {//old deprecated rc4's iv is empty
-        realKey = _key;
-    } else {//otherwise, it's rc4-md5
-        realKey = Cipher::md5Hash(_key + _iv);
-        realKey.resize(_key.size());
-    }
-
+    QByteArray realKey = Cipher::md5Hash(_key + _iv);
+    realKey.resize(_key.size());
     unsigned char *key = reinterpret_cast<unsigned char *>(realKey.data());
 
     for (quint32 i = 0; i < 256; ++i) {
         state[i] = static_cast<unsigned char>(i);
     }
     for (quint32 i = 0, state_index = 0; i < 256; ++i) {
-        state_index = (state_index + key[i % realKey.length()] + state[i]) % 256;
+        state_index = (state_index + key[i % realKey.length()] + state[i])
+                    % 256;
         std::swap(state[i], state[state_index]);
     }
     generate();
@@ -58,10 +54,14 @@ QByteArray RC4::update(const QByteArray &input)
     quint32 length = input.length();
     QByteArray output;
     output.resize(length);
-    const unsigned char *in = reinterpret_cast<const unsigned char*>(input.constData());
-    unsigned char *out = reinterpret_cast<unsigned char*>(output.data());
+    const unsigned char *in =
+            reinterpret_cast<const unsigned char*>(input.constData());
+    unsigned char *out =
+            reinterpret_cast<unsigned char*>(output.data());
 
-    for (quint32 delta = 4096 - position; length >= delta; delta = 4096 - position) {//4096 == buffer.size()
+    for (quint32 delta = 4096 - position;
+         length >= delta;
+         delta = 4096 - position) {//4096 == buffer.size()
         Common::exclusive_or(buffer.data() + position, in, out, delta);
         length -= delta;
         in += delta;

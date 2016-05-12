@@ -81,7 +81,9 @@ void Address::lookUp()
     if (isIPValid()) {
         emit lookedUp(true, QString());
     } else {
-        QHostInfo::lookupHost(data.first, this, SLOT(onLookUpFinished(QHostInfo)));
+        QHostInfo::lookupHost(data.first,
+                              this,
+                              SLOT(onLookUpFinished(QHostInfo)));
     }
 }
 
@@ -97,7 +99,7 @@ void Address::blockingLookUp()
 
 void Address::setAddress(const QString &a)
 {
-    data.first = a;
+    data.first = a.trimmed();
     ipAddrList.clear();
     QHostAddress ipAddress(a);
     if (!ipAddress.isNull()) {

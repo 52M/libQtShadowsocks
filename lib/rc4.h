@@ -5,7 +5,7 @@
  * unaligned memory. Therefore, I reimplemented RC4 here to get around
  * the crashes by not using unaligned memory xor.
  *
- * Copyright (C) 2014-2015 Symeon Huang <hzwhuang@gmail.com>
+ * Copyright (C) 2014-2016 Symeon Huang <hzwhuang@gmail.com>
  *
  * This file is part of the libQtShadowsocks.
  *
@@ -36,8 +36,12 @@ class RC4 : public QObject
 {
     Q_OBJECT
 public:
-    //non-skip
-    explicit RC4(const QByteArray &_key, const QByteArray &_iv, QObject *parent = 0);
+    // non-skip
+    // This class implements so-called RC4-MD5 cipher instead of original RC4
+    // _iv is not allowed to be empty!
+    explicit RC4(const QByteArray &_key,
+                 const QByteArray &_iv,
+                 QObject *parent = 0);
 
 public slots:
     QByteArray update(const QByteArray &input);
@@ -46,7 +50,8 @@ private:
     void generate();
 
     quint32 position;
-    unsigned char x, y;
+    unsigned char x;
+    unsigned char y;
     QVector<unsigned char> state;
     QVector<unsigned char> buffer;
 };

@@ -26,7 +26,12 @@
 
 using namespace QSS;
 
-UdpRelay::UdpRelay(const EncryptorPrivate &ep, const bool &is_local, const bool &auto_ban, const bool &auth, const Address &serverAddress, QObject *parent) :
+UdpRelay::UdpRelay(const EncryptorPrivate &ep,
+                   const bool &is_local,
+                   const bool &auto_ban,
+                   const bool &auth,
+                   const Address &serverAddress,
+                   QObject *parent) :
     QObject(parent),
     serverAddress(serverAddress),
     isLocal(is_local),
@@ -35,23 +40,39 @@ UdpRelay::UdpRelay(const EncryptorPrivate &ep, const bool &is_local, const bool 
 {
     encryptor = new Encryptor(ep, this);
 
-    listen.setReadBufferSize(RecvSize);
-    listen.setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    listenSocket.setReadBufferSize(RecvSize);
+    listenSocket.setSocketOption(QAbstractSocket::LowDelayOption, 1);
 
-    connect(&listen, &QUdpSocket::stateChanged, this, &UdpRelay::onListenStateChanged);
-    connect(&listen, &QUdpSocket::readyRead, this, &UdpRelay::onServerUdpSocketReadyRead);
-    connect(&listen, static_cast<void (QUdpSocket::*)(QAbstractSocket::SocketError)> (&QUdpSocket::error), this, &UdpRelay::onSocketError);
-    connect(&listen, &QUdpSocket::bytesWritten, this, &UdpRelay::bytesSend);
+    connect(&listenSocket, &QUdpSocket::stateChanged,
+            this, &UdpRelay::onListenStateChanged);
+    connect(&listenSocket, &QUdpSocket::readyRead,
+            this, &UdpRelay::onServerUdpSocketReadyRead);
+    connect(&listenSocket,
+            static_cast<void (QUdpSocket::*)(QAbstractSocket::SocketError)>
+            (&QUdpSocket::error),
+            this,
+            &UdpRelay::onSocketError);
+    connect(&listenSocket, &QUdpSocket::bytesWritten,
+            this, &UdpRelay::bytesSend);
 }
 
-void UdpRelay::setup(const QHostAddress &localAddr, const quint16 &localPort)
+bool UdpRelay::isListening() const
 {
-    listen.close();
-    if (isLocal) {
-        listen.bind(localAddr, localPort, QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
-    } else {
-        listen.bind(serverAddress.getFirstIP(), serverAddress.getPort(), QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint);
-    }
+    return listenSocket.isOpen();
+}
+
+bool UdpRelay::listen(const QHostAddress& addr, quint16 port)
+{
+    return listenSocket.bind(
+              addr,
+              port,
+              QAbstractSocket::ShareAddress | QAbstractSocket::ReuseAddressHint
+              );
+}
+
+void UdpRelay::close()
+{
+    listenSocket.close();
     encryptor->reset();
     QList<QUdpSocket*> cachedSockets = cache.values();
     for (QUdpSocket* sock : cachedSockets) {
@@ -67,7 +88,7 @@ void UdpRelay::onSocketError()
         emit info("Fatal. A false object calling onSocketError.");
         return;
     }
-    if (sock == &listen) {
+    if (sock == &listenSocket) {
         emit info("[UDP] server socket error " + sock->errorString());
     } else {
         emit info("[UDP] client socket error " + sock->errorString());
@@ -83,16 +104,19 @@ void UdpRelay::onListenStateChanged(QAbstractSocket::SocketState s)
 
 void UdpRelay::onServerUdpSocketReadyRead()
 {
-    if (listen.pendingDatagramSize() > RecvSize) {
+    if (listenSocket.pendingDatagramSize() > RecvSize) {
         emit info("[UDP] Datagram is too large. discarded.");
         return;
     }
 
     QByteArray data;
-    data.resize(listen.pendingDatagramSize());
+    data.resize(listenSocket.pendingDatagramSize());
     QHostAddress r_addr;
     quint16 r_port;
-    qint64 readSize = listen.readDatagram(data.data(), RecvSize, &r_addr, &r_port);
+    qint64 readSize = listenSocket.readDatagram(data.data(),
+                                                RecvSize,
+                                                &r_addr,
+                                                &r_port);
     emit bytesRead(readSize);
 
     if (isLocal) {
@@ -103,7 +127,9 @@ void UdpRelay::onServerUdpSocketReadyRead()
         data.remove(0, 3);
     } else {
         if (autoBan && Common::isAddressBanned(r_addr)) {
-            emit debug(QString("[UDP] A banned IP %1 attempted to access this server").arg(r_addr.toString()));
+            emit debug(QString("[UDP] A banned IP %1 "
+                               "attempted to access this server")
+                       .arg(r_addr.toString()));
             return;
         }
         data = encryptor->decryptAll(data);
@@ -114,7 +140,8 @@ void UdpRelay::onServerUdpSocketReadyRead()
     bool at_auth = false;
     Common::parseHeader(data, destAddr, header_length, at_auth);
     if (header_length == 0) {
-        emit info("[UDP] Can't parse header. Wrong encryption method or password?");
+        emit info("[UDP] Can't parse header. "
+                  "Wrong encryption method or password?");
         if (!isLocal && autoBan) {
             Common::banAddress(r_addr);
         }
@@ -128,8 +155,10 @@ void UdpRelay::onServerUdpSocketReadyRead()
         client->setReadBufferSize(RecvSize);
         client->setSocketOption(QAbstractSocket::LowDelayOption, 1);
         cache.insert(remoteAddr, client);
-        connect(client, &QUdpSocket::readyRead, this, &UdpRelay::onClientUdpSocketReadyRead);
-        connect(client, &QUdpSocket::disconnected, this, &UdpRelay::onClientDisconnected);
+        connect(client, &QUdpSocket::readyRead,
+                this, &UdpRelay::onClientUdpSocketReadyRead);
+        connect(client, &QUdpSocket::disconnected,
+                this, &UdpRelay::onClientDisconnected);
         QDebug(&dbg) << "[UDP] cache miss:" << destAddr << "<->" << remoteAddr;
     } else {
         QDebug(&dbg) << "[UDP] cache hit:" << destAddr << "<->" << remoteAddr;
@@ -152,15 +181,19 @@ void UdpRelay::onServerUdpSocketReadyRead()
         destAddr = serverAddress;
     } else {
         if (auth || at_auth) {
-            if (!encryptor->verifyHeaderAuth(data, data.length() - Cipher::AUTH_LEN)) {
-                emit info("[UDP] One-time message authentication for header failed.");
+            if (!encryptor->verifyHeaderAuth(data,
+                                             data.length() - Cipher::AUTH_LEN))
+            {
+                emit info("[UDP] One-time message authentication "
+                          "for header failed.");
                 if (autoBan) {
                     Common::banAddress(r_addr);
                 }
                 return;
             }
         }
-        data = data.mid(header_length, data.length() - header_length - Cipher::AUTH_LEN);
+        data = data.mid(header_length,
+                        data.length() - header_length - Cipher::AUTH_LEN);
     }
 
     if (!destAddr.isIPValid()) {//TODO async dns
@@ -197,7 +230,8 @@ void UdpRelay::onClientUdpSocketReadyRead()
 
         Common::parseHeader(data, destAddr, header_length, _auth);
         if (header_length == 0) {
-            emit info("[UDP] Can't parse header. Wrong encryption method or password?");
+            emit info("[UDP] Can't parse header. "
+                      "Wrong encryption method or password?");
             return;
         }
         response = QByteArray(3, static_cast<char>(0)) + data;
@@ -208,7 +242,9 @@ void UdpRelay::onClientUdpSocketReadyRead()
 
     Address clientAddress = cache.key(sock);
     if (clientAddress.getPort() != 0) {
-        listen.writeDatagram(response, clientAddress.getFirstIP(), clientAddress.getPort());
+        listenSocket.writeDatagram(response,
+                                   clientAddress.getFirstIP(),
+                                   clientAddress.getPort());
     } else {
         emit debug("[UDP] Drop a packet from somewhere else we know.");
     }

@@ -3,7 +3,7 @@
  *
  * This class is partly ported from Botan::ChaCha
  *
- * Copyright (C) 2014-2015 Symeon Huang <hzwhuang@gmail.com>
+ * Copyright (C) 2014-2016 Symeon Huang <hzwhuang@gmail.com>
  *
  * This file is part of the libQtShadowsocks.
  *
@@ -36,9 +36,11 @@ class ChaCha : public QObject
 public:
     /*
      * Key length must be 32 (16 is dropped)
-     * IV length must be 8
+     * IV length must be 8 or 12
      */
-    explicit ChaCha(const QByteArray &_key, const QByteArray &_iv, QObject *parent = 0);
+    explicit ChaCha(const QByteArray &_key,
+                    const QByteArray &_iv,
+                    QObject *parent = 0);
 
 public slots:
     //encrypt (or decrypt, same process for ChaCha algorithm) a byte array.
@@ -50,6 +52,7 @@ private:
     quint32 m_position;
 
     void chacha();
+    void setIV(const QByteArray &_iv);
 };
 
 }

@@ -1,3 +1,32 @@
+libqtshadowsocks (1.9.0-1) stable; urgency=medium
+
+  * add an API to return supported ciphers at run-time
+  * add an API to test shadowsocks Internet connectivity
+  * fix building issues on Mac OS X
+  * add ss uri utility functions to Profile class
+
+ -- Symeon Huang <hzwhuang@gmail.com>  Wed, 11 May 2016 22:34:00 +0100
+
+libqtshadowsocks (1.8.4-1) stable; urgency=medium
+
+  * fix a false true return value bug
+  * support chacha20-ietf
+
+ -- Symeon Huang <hzwhuang@gmail.com>  Tue, 12 Jan 2016 21:58:00 +0000
+
+libqtshadowsocks (1.8.3-1) stable; urgency=medium
+
+  * refine UDP start/stop
+
+ -- Symeon Huang <hzwhuang@gmail.com>  Sun, 10 Jan 2016 14:56:00 +0000
+
+libqtshadowsocks (1.8.2-1) stable; urgency=medium
+
+  * fix a bug in UDP relay when OTA is enabled
+  * improve stability
+
+ -- Symeon Huang <hzwhuang@gmail.com>  Wed, 16 Dec 2015 21:09:00 +0000
+
 libqtshadowsocks (1.8.1-1) stable; urgency=medium
 
   * improve stability

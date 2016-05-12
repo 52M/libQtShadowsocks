@@ -1,5 +1,5 @@
 # This file is part of project libQtShadowsocks
-# Copyright (C) 2014-2015 Symeon Huang <hzwhuang@gmail.com>
+# Copyright (C) 2014-2016 Symeon Huang <hzwhuang@gmail.com>
 # Licensed Under LGPLv3
 
 QT       += core network
@@ -21,11 +21,12 @@ isEmpty(BOTAN_VER) {
     BOTAN_VER = 1.10
 }
 
-VERSION   = 1.8.1
+VERSION   = 1.9.0
 DEFINES  += QSS_VERSION=\\\"$$VERSION\\\"
 
 win32: {
-    DEFINES    += "FD_SETSIZE=1024"#increase the maximum pending tcp sockets. this value is 64 on Windows by default
+#increase the maximum pending tcp sockets. this value is 64 on Windows by default
+    DEFINES    += "FD_SETSIZE=1024"
     DEFINES    += QSS_STATIC
 }
 
@@ -37,6 +38,11 @@ else {
 }
 
 include(QtShadowsocks.pri)
+
+macx: {
+    QT_CONFIG  -= no-pkg-config
+    DEFINES    += "FD_SETSIZE=1024"
+}
 
 unix: {
     CONFIG     += create_pc create_prl no_install_prl link_pkgconfig

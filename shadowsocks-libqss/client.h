@@ -1,7 +1,7 @@
 /*
  * client.h - header file of Client class
  *
- * Copyright (C) 2014-2015 Symeon Huang <hzwhuang@gmail.com>
+ * Copyright (C) 2014-2016 Symeon Huang <hzwhuang@gmail.com>
  *
  * This file is part of the libQtShadowsocks.
  *
@@ -33,7 +33,18 @@ class Client : public QObject
 public:
     explicit Client(QObject *parent = 0);
     bool readConfig(const QString &);
-    void setup(const QString &remote_addr, const QString &remote_port, const QString &local_addr, const QString &local_port, const QString &password, const QString &method, const QString &timeout, const bool http_proxy, const bool debug, const bool auth);
+
+    void setup(const QString &remote_addr,
+               const QString &remote_port,
+               const QString &local_addr,
+               const QString &local_port,
+               const QString &password,
+               const QString &method,
+               const QString &timeout,
+               const bool http_proxy,
+               const bool debug,
+               const bool auth);
+
     void setAutoBan(bool ban);
     void setDebug(bool debug);
     void setHttpMode(bool http);
@@ -53,6 +64,7 @@ private:
 
 private slots:
     void logHandler(const QString &);
+    void onConnectivityResultArrived(bool);
 };
 
 #endif // CLIENT_H

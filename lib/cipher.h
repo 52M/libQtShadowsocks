@@ -7,7 +7,7 @@
  * If there is a modification associated with encryption/decryption, it's
  * this class that needs changes instead of messing up lots of classes.
  *
- * Copyright (C) 2014-2015 Symeon Huang <hzwhuang@gmail.com>
+ * Copyright (C) 2014-2016 Symeon Huang <hzwhuang@gmail.com>
  *
  * This file is part of the libQtShadowsocks.
  *
@@ -66,14 +66,23 @@ public:
     /*
      * keyIvMap contains required key length and IV length
      * The CipherKeyIVLength contains two integers, key length and IV length
+     * The key of this map is the encryption method (shadowsocks convention)
      */
     static const QMap<QByteArray, CipherKeyIVLength> keyIvMap;
+
+    /*
+     * This map stores the shadowsocks convention name and the corresponding
+     * cipher name in Botan library
+     */
+    static const QMap<QByteArray, QByteArray> cipherNameMap;
     static const int AUTH_LEN;
 
     static QByteArray randomIv(int length);
     static QByteArray hmacSha1(const QByteArray &key, const QByteArray &msg);
     static QByteArray md5Hash(const QByteArray &in);
     static bool isSupported(const QByteArray &method);
+
+    static QList<QByteArray> getSupportedMethodList();
 
 private:
     Botan::Pipe *pipe;
@@ -82,6 +91,7 @@ private:
     QByteArray iv;
 
     static QMap<QByteArray, CipherKeyIVLength> generateKeyIvMap();
+    static QMap<QByteArray, QByteArray> generateCipherNameMap();
 };
 
 }
